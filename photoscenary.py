@@ -196,15 +196,15 @@ def get_size_pixel_width_by_distance(size, size_dwn, radius, distance, position_
     if debug_level > 0:
         print(f"Debug - get_size_pixel_width_by_distance: dist={distance}, radius={radius}, relative_distance={relative_distance}, size={size}")
     
-    # Ensure maximum resolution for the source tile (distance close to 0)
-    if distance < 0.001:  # Consider the source tile when the distance is almost zero
+    # Ensure maximum resolution for the first tile (closest to center)
+    if distance < 0.1:  # Relaxed threshold to ensure the first tile gets max resolution
         size_pixel_found = size  # Use the maximum resolution set by -s
         if debug_level > 0:
             print(f"Debug - get_size_pixel_width_by_distance: Origin tile detected (dist={distance}), using max size={size}")
     elif relative_distance < 0.1:  # Tiles too close
-        size_pixel_found = min(5, size)  # Maximum resolution
+        size_pixel_found = min(5, size)
     elif relative_distance < 0.3:  # Nearby tiles
-        size_pixel_found = min(4, size)  # Intermediate resolution
+        size_pixel_found = min(4, size)
     else:  # Farthest tiles
         size_pixel_found = int(round(size - (size - size_dwn) * relative_distance))
         size_pixel_found = max(size_dwn, min(size, size_pixel_found))
@@ -254,6 +254,20 @@ def coordinate_matrix_generator(m: MapCoordinates, white_tile_index_list_dict, s
             lon += tile_width(lat)
         lat += 0.125
     
+    # Ensure the tile containing the center point is first
+    player_tile = None
+    min_dist = float('inf')
+    for tile in a:
+        tile_lat = tile[5]  # lat
+        tile_lon = tile[2]  # lon
+        tile_width_val = tile[9]  # tile_width
+        if (tile_lat <= m.lat < tile_lat + 0.125 and 
+            tile_lon <= m.lon < tile_lon + tile_width_val):
+            player_tile = tile
+            break
+        if tile[10] < min_dist:
+            min_dist = tile[10]
+            player_tile = tile
     a_sort = sorted(a, key=lambda x: x[10])
     d = []
     c = None
@@ -530,7 +544,7 @@ def process_tile(xy, path_save, map_server, size, format, debug_level, converter
         sub_images = []
         if debug_level > 0:
             print(f"process_tile - Downloading {grid_size}x{grid_size} sub-images for tile {tile_id} in parallel")
-        with ThreadPoolExecutor(max_workers=16) as executor:
+        with ThreadPoolExecutor(max_workers=8) as executor:
             futures = [executor.submit(download_sub_image, sub_info) for sub_info in sub_images_info]
             for future in futures:
                 result = future.result()
@@ -614,7 +628,7 @@ def process_tiles(coordinates_matrix, map_coordinates, path_save, map_server, si
     processed_tiles = 0
     cursor = display_cursor_type_a()
     
-    # Process the first (closest) tile immediately
+    # Process the first (closest) tile immediately with maximum resolution
     if coordinates_matrix:
         first_tile_group = coordinates_matrix[0]
         first_xy = first_tile_group[0]
@@ -627,7 +641,12 @@ def process_tiles(coordinates_matrix, map_coordinates, path_save, map_server, si
             number_of_tiles += 1
         else:
             number_of_tiles += 1
-            size_pixel_w, size_pixel_h, cols_by_distance, grid_size = get_size_pixel_width_by_distance(size, size_dwn, map_coordinates.radius, first_xy[10], position_route, un_completed_tiles_attemps, lat=first_xy[5], debug_level=debug_level)
+            # Force maximum resolution for the first tile
+            size_pixel_found = size  # Use the maximum resolution set by -s
+            size_pixel_w, size_pixel_h, cols_by_distance, grid_size = get_size_pixel(
+                size_pixel_found, size_dwn, map_coordinates.radius, first_xy[10], 
+                position_route, un_completed_tiles_attemps, lat=first_xy[5], debug_level=debug_level
+            )
             first_tile_group[0] = first_xy[:-4] + (size_pixel_w, cols_by_distance, size_pixel_h, grid_size)
             if process_tile(first_tile_group[0], path_save, map_server, size, format, debug_level, converter=converter):
                 processed_tiles += 1
@@ -649,7 +668,10 @@ def process_tiles(coordinates_matrix, map_coordinates, path_save, map_server, si
                     number_of_tiles += 1
                     continue
                 number_of_tiles += 1
-                size_pixel_w, size_pixel_h, cols_by_distance, grid_size = get_size_pixel_width_by_distance(size, size_dwn, map_coordinates.radius, xy[10], position_route, un_completed_tiles_attemps, lat=xy[5], debug_level=debug_level)
+                size_pixel_w, size_pixel_h, cols_by_distance, grid_size = get_size_pixel_width_by_distance(
+                    size, size_dwn, map_coordinates.radius, xy[10], position_route, 
+                    un_completed_tiles_attemps, lat=xy[5], debug_level=debug_level
+                )
                 tile_group[i] = xy[:-4] + (size_pixel_w, cols_by_distance, size_pixel_h, grid_size)
                 futures.append(executor.submit(process_tile, tile_group[i], path_save, map_server, size, format, debug_level, converter=converter))
             
@@ -744,6 +766,12 @@ def main():
             lat = get_fgfs_position_lat(args.ip_port, args.debug)
             lon = get_fgfs_position_lon(args.ip_port, args.debug)
             if lat is not None and lon is not None:
+                # Validate position
+                if not (-90 <= lat <= 90 and -180 <= lon <= 180):
+                    if args.debug > 0:
+                        print(f"Error: Invalid Telnet position (lat={lat}, lon={lon})")
+                    time.sleep(5)
+                    continue
                 position_route = get_fgfs_position_set_task(args.ip_port, args.radius, 0.5, args.debug)
                 map_coordinates = MapCoordinates(lat, lon, args.radius)
                 coordinates_matrix, number_of_tiles, map_coordinates = coordinate_matrix_generator(
