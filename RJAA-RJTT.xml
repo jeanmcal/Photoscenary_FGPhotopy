@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+
+<PropertyList>
+  <version type="int">2</version>
+  <flight-rules type="string">V</flight-rules>
+  <flight-type type="string">X</flight-type>
+  <estimated-duration-minutes type="int">0</estimated-duration-minutes>
+  <departure>
+    <airport type="string">RJAA</airport>
+  </departure>
+  <destination>
+    <airport type="string">RJTT</airport>
+  </destination>
+  <route>
+    <wp>
+      <type type="string">navaid</type>
+      <departure type="bool">true</departure>
+      <ident type="string">RJAA</ident>
+      <lon type="double">140.3870457</lon>
+      <lat type="double">35.76406598</lat>
+    </wp>
+    <wp n="1">
+      <type type="string">navaid</type>
+      <approach type="bool">true</approach>
+      <ident type="string">RJTT</ident>
+      <lon type="double">139.7885536</lon>
+      <lat type="double">35.5482538</lat>
+    </wp>
+  </route>
+</PropertyList>
