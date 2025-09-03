@@ -2,6 +2,8 @@
 
 Photoscenary.py is a Python program designed to generate and manipulate photoscenery tiles for the FlightGear Flight Simulator (FGFS). It downloads orthophotos from map servers (e.g., ArcGIS), processes them into tiles, and converts them to DDS or PNG format for use in FlightGear.This project is a Python-based adaptation of the [Julia Photoscenary generator](https://github.com/abassign/Photoscenary?tab=GPL-2.0-1-ov-file) by Adriano Bassignana (abassign). It retains the core functionality of the original while introducing enhancements such as parallel tile processing, maximum resolution for the origin tile, and support for both NVIDIA Texture Tools (NVTT) and ImageMagick for DDS conversion.
 
+![Foto Grid Preview.](https://github.com/jeanmcal/Photoscenary_FGPhotopy/blob/main/photo-grid.png?raw=true)
+
 **Note**: This is not a final product. It is a work-in-progress with ongoing development and testing. The debug mode (`-v 2`) provides detailed information about the processes being executed, which is useful for troubleshooting and monitoring.A list of changes and version history can be found in Versions.md.
 
 ## Credits
