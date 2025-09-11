@@ -37,7 +37,7 @@ Photoscenary.py is a Python program designed to generate and manipulate photosce
 4. Open the **FGPhotopy.exe** and configure it your way.
 5. In the FlightGear launcher, go to **Add-ons** > **Scenery**, And add the same path that is in **FGPhotopy**
 
-# Uso sem interface
+# Use without interface
 
 1. Install the required toolchain (Python, dependencies *If using the command-line terminal*, and external tools **ImageMagick** or **NVIDIA Texture Tools Exporter**).
 2. Use the script to download and process photoscenery tiles in the correct format.
@@ -205,4 +205,5 @@ Photoscenary.py is licensed under the GNU General Public License v2 (GPL-2.0). S
      
 
     
+
 
