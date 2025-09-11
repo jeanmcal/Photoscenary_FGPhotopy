@@ -1,4 +1,4 @@
-# License: GPL 3
+# License: GPL 2
 
 import xml.etree.ElementTree as ET
 import unicodedata

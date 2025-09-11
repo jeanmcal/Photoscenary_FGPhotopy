@@ -1,4 +1,4 @@
-# License: GPL 3
+# License: GPL 2
 # TilesDatabase module for managing tile data
 
 from dataclasses import dataclass

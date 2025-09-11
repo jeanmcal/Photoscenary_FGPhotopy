@@ -1,4 +1,4 @@
-# License: GPL 3
+# License: GPL 2
 # Program for reading the aircraft position via Telnet protocol over TCP-IP.
 
 import socket

@@ -1,4 +1,4 @@
-# License: GPL 3
+# License: GPL 2
 
 import os
 import math
@@ -13,13 +13,22 @@ M = [90, 89, 86, 83, 76, 62, 22, -22]
 N = [12.0, 4.0, 2.0, 1.0, 0.5, 0.25, 0.125]
 
 def tile_width(lat):
-    """Calculate tile width based on latitude."""
-    total = 0
-    for x, y, z in zip(M, M[1:] + [None], N):
-        if y is None:
-            break
-        total += z * (1 if abs(lat) < x and abs(lat) >= y else 0)
-    return total
+    """Return the tile width in degrees based on latitude, per FlightGear."""
+    lat = abs(float(lat))
+    if lat >= 89.0:
+        return 12.0
+    elif lat >= 86.0:
+        return 4.0
+    elif lat >= 83.0:
+        return 2.0
+    elif lat >= 76.0:
+        return 1.0
+    elif lat >= 62.0:
+        return 0.5
+    elif lat > 22.0:
+        return 0.25
+    else:
+        return 0.125
 
 def base_x(lat, lon):
     """Calculate base longitude for tile."""

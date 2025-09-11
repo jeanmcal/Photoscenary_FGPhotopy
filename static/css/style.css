@@ -1,0 +1,22 @@
+#map {
+    height: 70vh;
+    width: 100%;
+}
+
+#controls form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+
+#reload-tiles {
+    margin-top: 10px;
+    padding: 8px;
+    background-color: #f0f0f0;
+    border: 1px solid #ccc;
+    cursor: pointer;
+}
+#reload-tiles:hover {
+    background-color: #e0e0e0;
+}

@@ -1,4 +1,4 @@
-# License: GPL 3
+# License: GPL 2
 # ScanDir module for directory scanning
 
 import os

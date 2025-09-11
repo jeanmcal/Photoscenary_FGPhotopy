@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <link rel="icon" href=".img/logo.png" type="image/x-icon">
+    <meta charset="UTF-8">
+    <title>Photoscenary Tile Downloader</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+        integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        #map {
+            height: 100vh;
+            width: 100vw;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+
+        #controls {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            max-width: 300px;
+            max-height: 696px;
+        }
+
+        #controls h3 {
+            margin: 0 0 10px;
+            display: inline-block;
+        }
+
+        #tile-code {
+            float: right;
+            font-size: 22px;
+            color: #333;
+        }
+
+        #search-bar {
+            width: 100%;
+            padding: 5px;
+            margin-bottom: 10px;
+        }
+
+        #search-results {
+            max-height: 100px;
+            overflow-y: auto;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            background: #fff;
+            display: none;
+        }
+
+        #search-results div {
+            padding: 5px;
+            cursor: pointer;
+        }
+
+        #search-results div:hover {
+            background: #f0f0f0;
+        }
+
+        #controls label {
+            display: block;
+            margin: 5px 0;
+        }
+
+        #controls input,
+        #controls select {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        #download-subtiles-button {
+            width: 100%;
+            padding: 10px;
+            background: #0078A8;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #controls button {
+            width: 100%;
+            padding: 10px;
+            background: #0078A8;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #controls button:hover {
+            background: #005F7F;
+        }
+
+        #controls button:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+        }
+
+        #cancel-download {
+            background: #ff4444;
+        }
+
+        #cancel-download:hover {
+            background: #cc0000;
+        }
+
+        #log {
+            border-radius: 4px;
+            overflow-y: auto;
+            margin-top: 10px;
+            font-size: 12px;
+            max-height: 79px;
+            background-color: white;
+            padding: 9px;
+        }
+
+        .leaflet-tooltip {
+            font-size: 12px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            border: none;
+            border-radius: 3px;
+            padding: 4px 8px;
+        }
+
+        .leaflet-tooltip.subtile-tooltip {
+            background-color: #333;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            padding: 5px 10px;
+            font-size: 12px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        }
+
+        #subtiles-window {
+            border-radius: 7px;
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: white;
+            padding: 10px;
+            border: 1px solid #ccc;
+            z-index: 1000;
+            max-height: calc(97vh - 20px);
+            overflow-y: auto;
+            width: 260px;
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        #subtiles-window h4 {
+            margin: 0 0 10px 0;
+        }
+
+        #subtiles-list .subtile-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 5px;
+        }
+
+        #subtiles-list select {
+            width: 100px;
+        }
+
+        .subtile-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 5px;
+        }
+
+        .color-box {
+            width: 20px;
+            height: 20px;
+            border: 1px solid #000;
+            border-radius: 3px;
+        }
+
+        .status-icon {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .status-icon .fa-spinner {
+            color: #3388ff;
+            /* Azul para o spinner */
+            animation: spin 1s linear infinite;
+            /* Animação de rotação */
+        }
+
+        .status-icon .fa-check {
+            color: #00ff00;
+            /* Verde para o checkmark */
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="map"></div>
+    <div id="subtiles-window" style="display: none;">
+        <h4>Selected Sub-tiles</h4>
+        <div id="subtiles-list"></div>
+        <button type="button" id="download-subtiles-button" style="display: none;">Download Subtiles</button>
+    </div>
+    <div id="controls">
+        <div style="display: flex; justify-content: space-between;">
+            <div>
+                <h3>Settings</h3>
+            </div>
+            <div id="tile-code">No tile selected</div>
+        </div>
+        <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+        </div>
+        <form>
+            <!-- Search section -->
+            <label for="search-bar">Search Airport:</label>
+            <input style=" width: 96%;" type="text" id="search-bar" placeholder="ICAO or Name">
+            <div id="search-results" style="display: none;"></div>
+
+            <!-- Toggle airports -->
+            <div style="display: flex; gap: 5px; align-items: center;">
+                <div><input style="width: 100%; margin: 0px" type="checkbox" id="toggle-airports" checked></div>
+                <div><label for="toggle-airports">Show Airport Pins</label></div>
+            </div>
+
+            <!-- Terrain quality -->
+            <label id="quality_label" for="quality-terrain">Terrain Quality:</label>
+            <select id="quality-terrain">
+                <option value="5">16384x16384</option>
+                <option value="4">8192x8192</option>
+                <option value="3">4096x4096</option>
+                <option value="2" selected>2048x2048</option>
+            </select>
+
+            <!-- Output path -->
+            <label for="output-path">Output Path:</label>
+            <input style=" width: 98%;" type="text" id="output-path" value="C:\Users\Pc\Documents\Photoscenery">
+
+            <!-- Conversion method -->
+            <label style=" width: 96%;" for="converter">Conversion Method:</label>
+            <select id="converter">
+                <option value="imagemagick" selected>ImageMagick</option>
+                <option value="nvtt">NVTT</option>
+            </select>
+
+            <!-- Action buttons -->
+            <button type="button" id="reload-tiles">Reload Tiles</button>
+            <p>
+            <div><button style="display: none;" type="button" id="download-subtiles">Select Sub-tiles</button></div>
+            <p>
+                <button style="background-color: #20a742;" type="button" id="download-tiles-1x1">Download 1x1 Tiles</button>
+                <button style="background-color: rgb(255, 0, 0);" type="button" id="remove-tiles">Remove Selected Tiles</button>
+            <div id="cancel-button-container"></div>
+        </form>
+
+        <!-- Selected tiles display -->
+        <div style="font-size: 13px;" id="selected-tiles">No tile selected</div>
+
+        <!-- Log output -->
+        <div id="log"></div>
+    </div>
+
+    <!-- External scripts -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+    <script src="{{ url_for('static', filename='js/map.js') }}"></script>
+</body>
+
+</html>
