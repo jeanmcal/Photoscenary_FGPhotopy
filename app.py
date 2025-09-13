@@ -677,8 +677,9 @@ def cancel_download():
 
 # Commented out: Alternative entry point for running with webview, not used when running Flask directly
 if __name__ == '__main__':
-    webview.create_window('FGFotopy', app)
+    webview.create_window('FGPhotopy', app)
     webview.start()
 
+# If you want to use the Web version through an IDE or Python, uncomment the section below and comment out the section above.
 #if __name__ == '__main__':
 #   app.run(debug=True, threaded=True)
